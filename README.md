@@ -11,7 +11,7 @@ Datadog requires the following event types:
 
 This script requires a working Python 3 installation, with the `requests` module installed.
 
-This script will query Azure DevOps APIs on your behalf. To achieve this, it requires a Personal Access Token (PAT). You can refer to [this Microsoft documentation](https://learn.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate?view=azure-devops&tabs=Windows#create-a-pat) for instructions on how to achieve this.
+This script requires an Azure DevOps Personal Access Token to query Azure DevOps APIs on your behalf. You can refer to [this Microsoft documentation](https://learn.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate?view=azure-devops&tabs=Windows#create-a-pat) for instructions on how to generate one.
 
 ```sh
 export AZURE_DEVOPS_TOKEN=<secret token>
