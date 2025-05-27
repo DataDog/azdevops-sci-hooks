@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
 import argparse
 import os
-import requests
 import sys
+
+try:
+    import requests
+except ImportError:
+    print("The 'requests' module is required to run this script. Please install it and retry.")
+    exit(1)
 
 # The event types that Datadog's Source Code Integration requires
 EVENT_TYPES = [
