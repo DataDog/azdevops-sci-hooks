@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
 import argparse
+import json
 import os
 import sys
-
-try:
-    import requests
-except ImportError:
-    print("The 'requests' module is required to run this script. Please install it and retry.")
-    exit(1)
+import urllib.error
+import urllib.parse
+import urllib.request
 
 # The event types that Datadog's Source Code Integration requires
 EVENT_TYPES = [
@@ -80,7 +78,12 @@ def main():
         exit(1)
 
     client = Client(
-        args.az_devops_org, az_devops_token, args.dd_site, dd_api_key, args.verbose, args.project
+        args.az_devops_org,
+        az_devops_token,
+        args.dd_site,
+        dd_api_key,
+        args.verbose,
+        args.project,
     )
 
     try:
@@ -96,7 +99,7 @@ def main():
             or e.response.status_code == 203  # 203 is used for the login redirect
         ):
             print(
-                "Invalid Azure DevOps token ! Please check that your Azure DevOps token is valid and has admin access to the organization."
+                "Invalid Azure DevOps token! Please check that your Azure DevOps token is valid and has admin access to the organization."
             )
         else:
             print(
@@ -107,7 +110,13 @@ def main():
 
 class Client:
     def __init__(
-        self, az_devops_org, az_devops_token, dd_site, dd_api_key, verbose=True, project=None
+        self,
+        az_devops_org,
+        az_devops_token,
+        dd_site,
+        dd_api_key,
+        verbose=True,
+        project=None,
     ):
         self.az_devops_token = az_devops_token
         self.az_devops_org = az_devops_org
@@ -122,7 +131,7 @@ class Client:
         projects = self.list_projects()
 
         if self.project is not None:
-            projects = [p for p in projects if p['name'] == self.project]
+            projects = [p for p in projects if p["name"] == self.project]
 
         if len(projects) == 0:
             if self.project is None:
@@ -154,14 +163,20 @@ class Client:
 
         if len(toProcess) == 0:
             if self.project is None:
-                print(f"All {len(projects)} projects in {self.az_devops_org} already have Datadog service hooks correctly configured !")
+                print(
+                    f"All {len(projects)} projects in {self.az_devops_org} already have Datadog service hooks correctly configured!"
+                )
             else:
-                print(f"The project {self.project} already has Datadog service hooks correctly configured !")
+                print(
+                    f"The project {self.project} already has Datadog service hooks correctly configured!"
+                )
             return
 
         # Prompt confirmation for batch setup
         if self.project is None:
-            yesno = input(f"{numProjectsMissingAtLeastOne} of {len(projects)} projects in {self.az_devops_org} are missing at least one service hook.\nPlease confirm that you want to configure service hooks for these {numProjectsMissingAtLeastOne} projects (yes/no): " )
+            yesno = input(
+                f"{numProjectsMissingAtLeastOne} of {len(projects)} projects in {self.az_devops_org} are missing at least one service hook.\nPlease confirm that you want to configure service hooks for these {numProjectsMissingAtLeastOne} projects (yes/no): "
+            )
             if yesno.lower() not in ["yes", "y"]:
                 print("Exiting.")
                 exit(1)
@@ -176,13 +191,19 @@ class Client:
             self.configure_service_hook(project, event_type)
 
         if self.project is None:
-            print(f"\nSuccessfully configured {len(toProcess)} service hooks among {numProjectsMissingAtLeastOne} projects in {self.az_devops_org} !")
+            print(
+                f"\nSuccessfully configured {len(toProcess)} service hooks among {numProjectsMissingAtLeastOne} projects in {self.az_devops_org}!"
+            )
         else:
-            print(f"\nSuccessfully configured {len(toProcess)} service hooks in project {self.project} !")
+            print(
+                f"\nSuccessfully configured {len(toProcess)} service hooks in project {self.project}!"
+            )
 
     def uninstall_hooks(self):
         if self.project is not None:
-            print("Specifying a single project is not supported for the uninstallation command.")
+            print(
+                "Specifying a single project is not supported for the uninstallation command."
+            )
             return
 
         hooks = self.get_existing_hooks()
@@ -212,19 +233,26 @@ class Client:
             self.delete_service_hook(hook)
 
         print(
-            f"\nSuccessfully uninstalled {len(hooks)} Datadog service hooks among {project_count} projects in {self.az_devops_org} !"
+            f"\nSuccessfully uninstalled {len(hooks)} Datadog service hooks among {project_count} projects in {self.az_devops_org}!"
         )
 
     def list_projects(self, continuation_token=None):
-        url = f"{self._az_base_url()}/_apis/projects?api-version=7.1"
-        params = {}
+        base_url = f"{self._az_base_url()}/_apis/projects"
+        params = {"api-version": "7.1"}
         if continuation_token:
             params = {"continuationToken": continuation_token}
-        response = requests.get(url, headers=self._az_auth_headers(), params=params)
-        if response.status_code != 200:
-            raise AzureDevOpsException("Error listing Azure DevOps projects", response)
 
-        data = response.json()
+        url = f"{base_url}?{urllib.parse.urlencode(params)}"
+        req = urllib.request.Request(url, headers=self._az_auth_headers())
+        try:
+            with urllib.request.urlopen(req) as response:
+                if response.status != 200:
+                    raise AzureDevOpsException(
+                        "Error listing Azure DevOps projects", response
+                    )
+                data = json.loads(response.read().decode())
+        except urllib.error.HTTPError as e:
+            raise AzureDevOpsException("Error listing Azure DevOps projects", e) from e
         projects = data["value"]
         continuation_token = data.get("continuation_token")
         if continuation_token:
@@ -233,10 +261,8 @@ class Client:
 
     def get_existing_hooks(self):
         url = f"{self._az_base_url()}/_apis/hooks/subscriptionsquery?api-version=7.1"
-        response = requests.post(
-            url,
-            headers=self._az_auth_headers(),
-            json={
+        payload = json.dumps(
+            {
                 "consumerId": "webHooks",
                 "consumerInputFilters": [
                     {
@@ -249,22 +275,27 @@ class Client:
                         ]
                     }
                 ],
-            },
-        )
-        if response.status_code != 200:
-            raise AzureDevOpsException("Error listing service hooks", response)
-
-        return response.json()["results"]
+            }
+        ).encode("utf-8")
+        headers = self._az_auth_headers()
+        headers["Content-Type"] = "application/json"
+        req = urllib.request.Request(url, headers=headers, data=payload, method="POST")
+        try:
+            with urllib.request.urlopen(req) as response:
+                if response.status != 200:
+                    raise AzureDevOpsException("Error listing service hooks", response)
+                data = json.loads(response.read().decode())
+        except urllib.error.HTTPError as e:
+            raise AzureDevOpsException("Error listing service hooks", e) from e
+        return data["results"]
 
     def configure_service_hook(self, project, event_type):
         self.verbose_print(
             f"Configuring {event_type} service hook for project {project['name']}..."
         )
         url = f"{self._az_base_url()}/_apis/hooks/subscriptions?api-version=7.1"
-        response = requests.post(
-            url,
-            headers=self._az_auth_headers(),
-            json={
+        payload = json.dumps(
+            {
                 "publisherId": "tfs",
                 "eventType": event_type,
                 "resourceVersion": "1.0",
@@ -277,24 +308,43 @@ class Client:
                     "url": self._webhook_url(),
                     "httpHeaders": "dd-api-key: " + self.dd_api_key,
                 },
-            },
-        )
-        if response.status_code != 200:
+            }
+        ).encode("utf-8")
+        headers = self._az_auth_headers()
+        headers["Content-Type"] = "application/json"
+        req = urllib.request.Request(url, headers=headers, data=payload, method="POST")
+        try:
+            with urllib.request.urlopen(req) as response:
+                if response.status != 200:
+                    raise AzureDevOpsException(
+                        f"Error configuring service hook for project {project['name']}",
+                        response,
+                    )
+        except urllib.error.HTTPError as e:
             raise AzureDevOpsException(
                 f"Error configuring service hook for project {project['name']}",
-                response,
-            )
+                e,
+            ) from e
 
     def delete_service_hook(self, hook):
         self.verbose_print(
             f"Removing {hook['eventType']} service hook for project {hook['publisherInputs']['projectId']}..."
         )
         url = f"{self._az_base_url()}/_apis/hooks/subscriptions/{hook['id']}?api-version=7.1"
-        response = requests.delete(url, headers=self._az_auth_headers())
-        if response.status_code != 204:
-            raise AzureDevOpsException(
-                f"Error deleting service hook {hook['id']}", response
-            )
+        req = urllib.request.Request(
+            url, headers=self._az_auth_headers(), method="DELETE"
+        )
+        try:
+            with urllib.request.urlopen(req) as response:
+                if response.status != 204:
+                    raise AzureDevOpsException(
+                        f"Error deleting service hook {hook['id']}", response
+                    )
+        except urllib.error.HTTPError as e:
+            if e.code != 204:
+                raise AzureDevOpsException(
+                    f"Error deleting service hook {hook['id']}", e
+                ) from e
 
     def _az_auth_headers(self):
         return {"Authorization": f"Bearer {self.az_devops_token}"}
@@ -307,11 +357,17 @@ class Client:
 
     def validate_dd_api_key(self):
         url = f"https://api.{self.dd_site}/api/v1/validate"
-        response = requests.get(url, headers={"DD-API-KEY": self.dd_api_key})
-        if response.status_code != 200:
+        req = urllib.request.Request(url, headers={"DD-API-KEY": self.dd_api_key})
+        try:
+            with urllib.request.urlopen(req) as response:
+                if response.status != 200:
+                    raise Exception(
+                        f"Invalid Datadog API key! Please check your Datadog site and API key.\n{response.status} {response.read().decode()}"
+                    )
+        except urllib.error.HTTPError as e:
             raise Exception(
-                f"Invalid Datadog API key ! Please check your Datadog site and API key.\n{response.status_code} {response.text}"
-            )
+                f"Error validating Datadog API key! \n{e.code} {e.read().decode()}"
+            ) from e
 
     def verbose_print(self, *args, **kwargs):
         if self.verbose:
