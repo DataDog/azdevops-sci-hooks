@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
 import argparse
+import json
 import os
 import sys
-
-try:
-    import requests
-except ImportError:
-    print("The 'requests' module is required to run this script. Please install it and retry.")
-    exit(1)
+import urllib.error
+import urllib.parse
+import urllib.request
 
 # The event types that Datadog's Source Code Integration requires
 EVENT_TYPES = [
@@ -216,15 +214,22 @@ class Client:
         )
 
     def list_projects(self, continuation_token=None):
-        url = f"{self._az_base_url()}/_apis/projects?api-version=7.1"
-        params = {}
+        base_url = f"{self._az_base_url()}/_apis/projects"
+        params = {"api-version": "7.1"}
         if continuation_token:
             params = {"continuationToken": continuation_token}
-        response = requests.get(url, headers=self._az_auth_headers(), params=params)
-        if response.status_code != 200:
-            raise AzureDevOpsException("Error listing Azure DevOps projects", response)
 
-        data = response.json()
+        url = f"{base_url}?{urllib.parse.urlencode(params)}"
+        req = urllib.request.Request(url, headers=self._az_auth_headers())
+        try:
+            with urllib.request.urlopen(req) as response:
+                if response.status != 200:
+                    raise AzureDevOpsException(
+                        "Error listing Azure DevOps projects", response
+                    )
+                data = json.loads(response.read().decode())
+        except urllib.error.HTTPError as e:
+            raise AzureDevOpsException("Error listing Azure DevOps projects", e) from e
         projects = data["value"]
         continuation_token = data.get("continuation_token")
         if continuation_token:
@@ -233,10 +238,8 @@ class Client:
 
     def get_existing_hooks(self):
         url = f"{self._az_base_url()}/_apis/hooks/subscriptionsquery?api-version=7.1"
-        response = requests.post(
-            url,
-            headers=self._az_auth_headers(),
-            json={
+        payload = json.dumps(
+            {
                 "consumerId": "webHooks",
                 "consumerInputFilters": [
                     {
@@ -249,22 +252,27 @@ class Client:
                         ]
                     }
                 ],
-            },
-        )
-        if response.status_code != 200:
-            raise AzureDevOpsException("Error listing service hooks", response)
-
-        return response.json()["results"]
+            }
+        ).encode("utf-8")
+        headers = self._az_auth_headers()
+        headers["Content-Type"] = "application/json"
+        req = urllib.request.Request(url, headers=headers, data=payload, method="POST")
+        try:
+            with urllib.request.urlopen(req) as response:
+                if response.status != 200:
+                    raise AzureDevOpsException("Error listing service hooks", response)
+                data = json.loads(response.read().decode())
+        except urllib.error.HTTPError as e:
+            raise AzureDevOpsException("Error listing service hooks", e) from e
+        return data["results"]
 
     def configure_service_hook(self, project, event_type):
         self.verbose_print(
             f"Configuring {event_type} service hook for project {project['name']}..."
         )
         url = f"{self._az_base_url()}/_apis/hooks/subscriptions?api-version=7.1"
-        response = requests.post(
-            url,
-            headers=self._az_auth_headers(),
-            json={
+        payload = json.dumps(
+            {
                 "publisherId": "tfs",
                 "eventType": event_type,
                 "resourceVersion": "1.0",
@@ -277,24 +285,43 @@ class Client:
                     "url": self._webhook_url(),
                     "httpHeaders": "dd-api-key: " + self.dd_api_key,
                 },
-            },
-        )
-        if response.status_code != 200:
+            }
+        ).encode("utf-8")
+        headers = self._az_auth_headers()
+        headers["Content-Type"] = "application/json"
+        req = urllib.request.Request(url, headers=headers, data=payload, method="POST")
+        try:
+            with urllib.request.urlopen(req) as response:
+                if response.status != 200:
+                    raise AzureDevOpsException(
+                        f"Error configuring service hook for project {project['name']}",
+                        response,
+                    )
+        except urllib.error.HTTPError as e:
             raise AzureDevOpsException(
                 f"Error configuring service hook for project {project['name']}",
-                response,
-            )
+                e,
+            ) from e
 
     def delete_service_hook(self, hook):
         self.verbose_print(
             f"Removing {hook['eventType']} service hook for project {hook['publisherInputs']['projectId']}..."
         )
         url = f"{self._az_base_url()}/_apis/hooks/subscriptions/{hook['id']}?api-version=7.1"
-        response = requests.delete(url, headers=self._az_auth_headers())
-        if response.status_code != 204:
-            raise AzureDevOpsException(
-                f"Error deleting service hook {hook['id']}", response
-            )
+        req = urllib.request.Request(
+            url, headers=self._az_auth_headers(), method="DELETE"
+        )
+        try:
+            with urllib.request.urlopen(req) as response:
+                if response.status != 204:
+                    raise AzureDevOpsException(
+                        f"Error deleting service hook {hook['id']}", response
+                    )
+        except urllib.error.HTTPError as e:
+            if e.code != 204:
+                raise AzureDevOpsException(
+                    f"Error deleting service hook {hook['id']}", e
+                ) from e
 
     def _az_auth_headers(self):
         return {"Authorization": f"Bearer {self.az_devops_token}"}
@@ -307,11 +334,17 @@ class Client:
 
     def validate_dd_api_key(self):
         url = f"https://api.{self.dd_site}/api/v1/validate"
-        response = requests.get(url, headers={"DD-API-KEY": self.dd_api_key})
-        if response.status_code != 200:
+        req = urllib.request.Request(url, headers={"DD-API-KEY": self.dd_api_key})
+        try:
+            with urllib.request.urlopen(req) as response:
+                if response.status != 200:
+                    raise Exception(
+                        f"Invalid Datadog API key! Please check your Datadog site and API key.\n{response.status} {response.read().decode()}"
+                    )
+        except urllib.error.HTTPError as e:
             raise Exception(
-                f"Invalid Datadog API key ! Please check your Datadog site and API key.\n{response.status_code} {response.text}"
-            )
+                f"Error validating Datadog API key! \n{e.code} {e.read().decode()}"
+            ) from e
 
     def verbose_print(self, *args, **kwargs):
         if self.verbose:
