@@ -78,7 +78,12 @@ def main():
         exit(1)
 
     client = Client(
-        args.az_devops_org, az_devops_token, args.dd_site, dd_api_key, args.verbose, args.project
+        args.az_devops_org,
+        az_devops_token,
+        args.dd_site,
+        dd_api_key,
+        args.verbose,
+        args.project,
     )
 
     try:
@@ -94,7 +99,7 @@ def main():
             or e.response.status_code == 203  # 203 is used for the login redirect
         ):
             print(
-                "Invalid Azure DevOps token ! Please check that your Azure DevOps token is valid and has admin access to the organization."
+                "Invalid Azure DevOps token! Please check that your Azure DevOps token is valid and has admin access to the organization."
             )
         else:
             print(
@@ -105,7 +110,13 @@ def main():
 
 class Client:
     def __init__(
-        self, az_devops_org, az_devops_token, dd_site, dd_api_key, verbose=True, project=None
+        self,
+        az_devops_org,
+        az_devops_token,
+        dd_site,
+        dd_api_key,
+        verbose=True,
+        project=None,
     ):
         self.az_devops_token = az_devops_token
         self.az_devops_org = az_devops_org
@@ -120,7 +131,7 @@ class Client:
         projects = self.list_projects()
 
         if self.project is not None:
-            projects = [p for p in projects if p['name'] == self.project]
+            projects = [p for p in projects if p["name"] == self.project]
 
         if len(projects) == 0:
             if self.project is None:
@@ -152,14 +163,20 @@ class Client:
 
         if len(toProcess) == 0:
             if self.project is None:
-                print(f"All {len(projects)} projects in {self.az_devops_org} already have Datadog service hooks correctly configured !")
+                print(
+                    f"All {len(projects)} projects in {self.az_devops_org} already have Datadog service hooks correctly configured!"
+                )
             else:
-                print(f"The project {self.project} already has Datadog service hooks correctly configured !")
+                print(
+                    f"The project {self.project} already has Datadog service hooks correctly configured!"
+                )
             return
 
         # Prompt confirmation for batch setup
         if self.project is None:
-            yesno = input(f"{numProjectsMissingAtLeastOne} of {len(projects)} projects in {self.az_devops_org} are missing at least one service hook.\nPlease confirm that you want to configure service hooks for these {numProjectsMissingAtLeastOne} projects (yes/no): " )
+            yesno = input(
+                f"{numProjectsMissingAtLeastOne} of {len(projects)} projects in {self.az_devops_org} are missing at least one service hook.\nPlease confirm that you want to configure service hooks for these {numProjectsMissingAtLeastOne} projects (yes/no): "
+            )
             if yesno.lower() not in ["yes", "y"]:
                 print("Exiting.")
                 exit(1)
@@ -174,13 +191,19 @@ class Client:
             self.configure_service_hook(project, event_type)
 
         if self.project is None:
-            print(f"\nSuccessfully configured {len(toProcess)} service hooks among {numProjectsMissingAtLeastOne} projects in {self.az_devops_org} !")
+            print(
+                f"\nSuccessfully configured {len(toProcess)} service hooks among {numProjectsMissingAtLeastOne} projects in {self.az_devops_org}!"
+            )
         else:
-            print(f"\nSuccessfully configured {len(toProcess)} service hooks in project {self.project} !")
+            print(
+                f"\nSuccessfully configured {len(toProcess)} service hooks in project {self.project}!"
+            )
 
     def uninstall_hooks(self):
         if self.project is not None:
-            print("Specifying a single project is not supported for the uninstallation command.")
+            print(
+                "Specifying a single project is not supported for the uninstallation command."
+            )
             return
 
         hooks = self.get_existing_hooks()
@@ -210,7 +233,7 @@ class Client:
             self.delete_service_hook(hook)
 
         print(
-            f"\nSuccessfully uninstalled {len(hooks)} Datadog service hooks among {project_count} projects in {self.az_devops_org} !"
+            f"\nSuccessfully uninstalled {len(hooks)} Datadog service hooks among {project_count} projects in {self.az_devops_org}!"
         )
 
     def list_projects(self, continuation_token=None):
