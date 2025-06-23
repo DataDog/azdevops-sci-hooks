@@ -9,12 +9,20 @@ Datadog requires the following event types:
 
 ## Usage
 
-This script requires a working Python 3 installation, with the `requests` module installed.
+This script requires either:
+- a working Python 3 installation
+- a working Powershell installation
 
 This script requires an Azure DevOps Personal Access Token to query Azure DevOps APIs on your behalf. You can refer to [this Microsoft documentation](https://learn.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate?view=azure-devops&tabs=Windows#create-a-pat) for instructions on how to generate one.
 
 ```sh
+# Bash
 export AZURE_DEVOPS_TOKEN=<secret token>
+```
+
+```powershell
+# Powershell
+$Env:AZURE_DEVOPS_TOKEN = "<secret token>"
 ```
 
 ### Installing the service hooks
@@ -27,7 +35,13 @@ To install the service hooks on all projects in your Azure DevOps organization, 
 The command will display the number of affected projects and prompt you for confirmation before proceeding.
 
 ```sh
+# Python script
 DD_API_KEY=<api-key> ./setup-hooks.py --dd-site=<datadog-site> --az-devops-org=<organization-slug>
+```
+```powershell
+# Powershell
+$Env:DD_API_KEY = "<api-key>"
+.\setup-hooks.ps1 -DdSite <datadog-site> -AzDevOpsOrg <organization-slug>
 ```
 
 If you only want to install the service hooks for a single project in your Azure DevOps organization, you can use the `--project` flag to only target this one.
@@ -37,7 +51,13 @@ If you only want to install the service hooks for a single project in your Azure
 The following command will uninstall the Datadog service hooks from **all projects** in your organization:
 
 ```sh
+# Python script
 ./setup-hooks.py --dd-site=<datadog-site> --az-devops-org=<organization-slug> --uninstall
+```
+
+```powershell
+# Powershell
+.\setup-hooks.ps1 -DdSite <datadog-site> -AzDevOpsOrg <organization-slug> -Uninstall
 ```
 
 ## Limitations
