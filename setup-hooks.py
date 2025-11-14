@@ -12,6 +12,12 @@ EVENT_TYPES = [
     "git.pullrequest.created",
     "git.pullrequest.updated",
     "git.push",
+    "ms.vss-pipelines.run-state-changed-event",
+    "ms.vss-pipelines.stage-state-changed-event",
+    "ms.vss-pipelines.job-state-changed-event",
+    "ms.vss-pipelinechecks-events.approval-pending",
+    "ms.vss-pipelinechecks-events.approval-completed",
+    "build.complete",
 ]
 
 VALID_DD_SITES = [

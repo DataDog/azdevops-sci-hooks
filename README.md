@@ -6,6 +6,12 @@ Datadog requires the following event types:
 - [`git.pullrequest.created`](https://learn.microsoft.com/en-us/azure/devops/service-hooks/events?view=azure-devops#git.pullrequest.created)
 - [`git.pullrequest.updated`](https://learn.microsoft.com/en-us/azure/devops/service-hooks/events?view=azure-devops#git.pullrequest.updated)
 - [`git.push`](https://learn.microsoft.com/en-us/azure/devops/service-hooks/events?view=azure-devops#git.push)
+- [`ms.vss-pipelines.run-state-changed-event`](https://learn.microsoft.com/en-us/azure/devops/service-hooks/events?view=azure-devops#run-state-changed)
+- [`ms.vss-pipelines.stage-state-changed-event`](https://learn.microsoft.com/en-us/azure/devops/service-hooks/events?view=azure-devops#run-stage-state-changed)
+- [`ms.vss-pipelines.job-state-changed-event`](https://learn.microsoft.com/en-us/azure/devops/service-hooks/events?view=azure-devops#run-job-state-changed)
+- [`ms.vss-pipelinechecks-events.approval-pending`](https://learn.microsoft.com/en-us/azure/devops/service-hooks/events?view=azure-devops#run-stage-waiting-for-approval)
+- [`ms.vss-pipelinechecks-events.approval-completed`](https://learn.microsoft.com/en-us/azure/devops/service-hooks/events?view=azure-devops#run-stage-approval-completed)
+- [`build.complete`](https://learn.microsoft.com/en-us/azure/devops/service-hooks/events?view=azure-devops#build-completed)
 
 ## Usage
 
