@@ -25,7 +25,7 @@ VERSION_1_0 = "1.0"
 VERSION_5_1_PREVIEW_1 = "5.1-preview.1"
 
 # Default resource version for event types
-DEFAULT_RESOURCE_VERSION = VERSION_1_0
+DEFAULT_RESOURCE_VERSION = "latest"
 
 # Mapping of event types to their resource versions
 EVENT_TYPE_VERSIONS = {
