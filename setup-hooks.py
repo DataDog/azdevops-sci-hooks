@@ -20,14 +20,17 @@ EVENT_TYPES = [
     "build.complete",
 ]
 
+# Resource Versions
+VERSION_1_0 = "1.0"
+
 # Default resource version for event types
-DEFAULT_RESOURCE_VERSION = "1.0"
+DEFAULT_RESOURCE_VERSION = VERSION_1_0
 
 # Mapping of event types to their resource versions
 EVENT_TYPE_VERSIONS = {
-    "git.pullrequest.created": "1.0",
-    "git.pullrequest.updated": "1.0",
-    "git.push": "1.0",
+    "git.pullrequest.created": VERSION_1_0,
+    "git.pullrequest.updated": VERSION_1_0,
+    "git.push": VERSION_1_0,
 }
 
 VALID_DD_SITES = [
