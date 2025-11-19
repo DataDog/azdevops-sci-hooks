@@ -32,12 +32,6 @@ EVENT_TYPE_VERSIONS = {
     "git.pullrequest.created": VERSION_1_0,
     "git.pullrequest.updated": VERSION_1_0,
     "git.push": VERSION_1_0,
-    "ms.vss-pipelines.run-state-changed-event": VERSION_5_1_PREVIEW_1,
-    "ms.vss-pipelines.stage-state-changed-event": VERSION_5_1_PREVIEW_1,
-    "ms.vss-pipelines.job-state-changed-event": VERSION_5_1_PREVIEW_1,
-    "ms.vss-pipelinechecks-events.approval-pending": VERSION_5_1_PREVIEW_1,
-    "ms.vss-pipelinechecks-events.approval-completed": VERSION_5_1_PREVIEW_1,
-    "build.complete": VERSION_5_1_PREVIEW_1,
 }
 
 VALID_DD_SITES = [
