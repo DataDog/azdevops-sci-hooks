@@ -22,6 +22,26 @@ $EVENT_TYPES = @(
     "build.complete"
 )
 
+# Resource Versions
+$VERSION_1_0 = "1.0"
+$VERSION_5_1_PREVIEW_1 = "5.1-preview.1"
+
+# Default resource version for event types
+$DEFAULT_RESOURCE_VERSION = $VERSION_1_0
+
+# Mapping of event types to their resource versions
+$EVENT_TYPE_VERSIONS = @{
+    "git.pullrequest.created" = $VERSION_1_0
+    "git.pullrequest.updated" = $VERSION_1_0
+    "git.push" = $VERSION_1_0
+    "ms.vss-pipelines.run-state-changed-event" = $VERSION_5_1_PREVIEW_1
+    "ms.vss-pipelines.stage-state-changed-event" = $VERSION_5_1_PREVIEW_1
+    "ms.vss-pipelines.job-state-changed-event" = $VERSION_5_1_PREVIEW_1
+    "ms.vss-pipelinechecks-events.approval-pending" = $VERSION_5_1_PREVIEW_1
+    "ms.vss-pipelinechecks-events.approval-completed" = $VERSION_5_1_PREVIEW_1
+    "build.complete" = $VERSION_5_1_PREVIEW_1
+}
+
 function Write-Progress-Bar {
     param(
         [int]$Iteration,
@@ -159,10 +179,11 @@ class Client {
 
         $url = "$($this.GetAzBaseUrl())/_apis/hooks/subscriptions?api-version=7.1"
         $publisherId = $this.GetPublisherId($EventType)
+        $resourceVersion = $script:EVENT_TYPE_VERSIONS[$EventType] ?? $script:DEFAULT_RESOURCE_VERSION
         $body = @{
             publisherId = $publisherId
             eventType = $EventType
-            resourceVersion = "1.0"
+            resourceVersion = $resourceVersion
             consumerId = "webHooks"
             consumerActionId = "httpRequest"
             publisherInputs = @{
