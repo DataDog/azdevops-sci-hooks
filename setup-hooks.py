@@ -295,14 +295,22 @@ class Client:
             raise AzureDevOpsException("Error listing service hooks", e) from e
         return data["results"]
 
+    def _get_publisher_id(self, event_type):
+        """Get the correct publisher ID for a given event type."""
+        if event_type.startswith("ms.vss-pipelines.") or event_type.startswith("ms.vss-pipelinechecks-events."):
+            return "pipelines"
+        else:
+            return "tfs"
+
     def configure_service_hook(self, project, event_type):
         self.verbose_print(
             f"Configuring {event_type} service hook for project {project['name']}..."
         )
         url = f"{self._az_base_url()}/_apis/hooks/subscriptions?api-version=7.1"
+        publisher_id = self._get_publisher_id(event_type)
         payload = json.dumps(
             {
-                "publisherId": "tfs",
+                "publisherId": publisher_id,
                 "eventType": event_type,
                 "resourceVersion": "1.0",
                 "consumerId": "webHooks",

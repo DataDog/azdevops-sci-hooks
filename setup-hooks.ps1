@@ -81,6 +81,15 @@ class Client {
         return "https://webhook-intake.$($this.DdSite)/api/v2/webhook"
     }
 
+    [string] GetPublisherId([string]$EventType) {
+        if ($EventType.StartsWith("ms.vss-pipelines.") -or $EventType.StartsWith("ms.vss-pipelinechecks-events.")) {
+            return "pipelines"
+        }
+        else {
+            return "tfs"
+        }
+    }
+
     [void] ValidateDdApiKey() {
         $url = "https://api.$($this.DdSite)/api/v1/validate"
         $headers = @{
@@ -149,8 +158,9 @@ class Client {
         }
 
         $url = "$($this.GetAzBaseUrl())/_apis/hooks/subscriptions?api-version=7.1"
+        $publisherId = $this.GetPublisherId($EventType)
         $body = @{
-            publisherId = "tfs"
+            publisherId = $publisherId
             eventType = $EventType
             resourceVersion = "1.0"
             consumerId = "webHooks"
