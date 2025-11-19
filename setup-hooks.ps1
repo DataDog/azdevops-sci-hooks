@@ -16,6 +16,16 @@ $EVENT_TYPES = @(
     "git.push"
 )
 
+# Default resource version for event types
+$DEFAULT_RESOURCE_VERSION = "1.0"
+
+# Mapping of event types to their resource versions
+$EVENT_TYPE_VERSIONS = @{
+    "git.pullrequest.created" = "1.0"
+    "git.pullrequest.updated" = "1.0"
+    "git.push" = "1.0"
+}
+
 function Write-Progress-Bar {
     param(
         [int]$Iteration,
@@ -143,10 +153,11 @@ class Client {
         }
 
         $url = "$($this.GetAzBaseUrl())/_apis/hooks/subscriptions?api-version=7.1"
+        $resourceVersion = $script:EVENT_TYPE_VERSIONS[$EventType] ?? $script:DEFAULT_RESOURCE_VERSION
         $body = @{
             publisherId = "tfs"
             eventType = $EventType
-            resourceVersion = "1.0"
+            resourceVersion = $resourceVersion
             consumerId = "webHooks"
             consumerActionId = "httpRequest"
             publisherInputs = @{

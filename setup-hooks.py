@@ -14,6 +14,16 @@ EVENT_TYPES = [
     "git.push",
 ]
 
+# Default resource version for event types
+DEFAULT_RESOURCE_VERSION = "1.0"
+
+# Mapping of event types to their resource versions
+EVENT_TYPE_VERSIONS = {
+    "git.pullrequest.created": "1.0",
+    "git.pullrequest.updated": "1.0",
+    "git.push": "1.0",
+}
+
 VALID_DD_SITES = [
     "datadoghq.com",
     "datadoghq.eu",
@@ -294,11 +304,12 @@ class Client:
             f"Configuring {event_type} service hook for project {project['name']}..."
         )
         url = f"{self._az_base_url()}/_apis/hooks/subscriptions?api-version=7.1"
+        resource_version = EVENT_TYPE_VERSIONS.get(event_type, DEFAULT_RESOURCE_VERSION)
         payload = json.dumps(
             {
                 "publisherId": "tfs",
                 "eventType": event_type,
-                "resourceVersion": "1.0",
+                "resourceVersion": resource_version,
                 "consumerId": "webHooks",
                 "consumerActionId": "httpRequest",
                 "publisherInputs": {
