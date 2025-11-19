@@ -18,7 +18,7 @@ EVENT_TYPES = [
 VERSION_1_0 = "1.0"
 
 # Default resource version for event types
-DEFAULT_RESOURCE_VERSION = VERSION_1_0
+DEFAULT_RESOURCE_VERSION = "latest"
 
 # Mapping of event types to their resource versions
 EVENT_TYPE_VERSIONS = {
