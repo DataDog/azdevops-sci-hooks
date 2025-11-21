@@ -19,8 +19,8 @@ $EVENT_TYPES = @(
 # Resource Versions
 $VERSION_1_0 = "1.0"
 
-# Default resource version for event types
-$DEFAULT_RESOURCE_VERSION = "latest"
+# Default resource version for event types, when empty it uses the latest version
+$DEFAULT_RESOURCE_VERSION = ""
 
 # Mapping of event types to their resource versions
 $EVENT_TYPE_VERSIONS = @{
