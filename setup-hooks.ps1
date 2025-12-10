@@ -13,7 +13,13 @@ param(
 $EVENT_TYPES = @(
     "git.pullrequest.created",
     "git.pullrequest.updated",
-    "git.push"
+    "git.push",
+    "ms.vss-pipelines.run-state-changed-event",
+    "ms.vss-pipelines.stage-state-changed-event",
+    "ms.vss-pipelines.job-state-changed-event",
+    "ms.vss-pipelinechecks-events.approval-pending",
+    "ms.vss-pipelinechecks-events.approval-completed",
+    "build.complete"
 )
 
 # Resource Versions
@@ -88,6 +94,15 @@ class Client {
         return "https://webhook-intake.$($this.DdSite)/api/v2/webhook"
     }
 
+    [string] GetPublisherId([string]$EventType) {
+        if ($EventType.StartsWith("ms.vss-pipelines.") -or $EventType.StartsWith("ms.vss-pipelinechecks-events.")) {
+            return "pipelines"
+        }
+        else {
+            return "tfs"
+        }
+    }
+
     [void] ValidateDdApiKey() {
         $url = "https://api.$($this.DdSite)/api/v1/validate"
         $headers = @{
@@ -156,9 +171,10 @@ class Client {
         }
 
         $url = "$($this.GetAzBaseUrl())/_apis/hooks/subscriptions?api-version=7.1"
+        $publisherId = $this.GetPublisherId($EventType)
         $resourceVersion = $script:EVENT_TYPE_VERSIONS[$EventType] ?? $script:DEFAULT_RESOURCE_VERSION
         $body = @{
-            publisherId = "tfs"
+            publisherId = $publisherId
             eventType = $EventType
             resourceVersion = $resourceVersion
             consumerId = "webHooks"

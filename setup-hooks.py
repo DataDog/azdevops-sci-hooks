@@ -12,6 +12,12 @@ EVENT_TYPES = [
     "git.pullrequest.created",
     "git.pullrequest.updated",
     "git.push",
+    "ms.vss-pipelines.run-state-changed-event",
+    "ms.vss-pipelines.stage-state-changed-event",
+    "ms.vss-pipelines.job-state-changed-event",
+    "ms.vss-pipelinechecks-events.approval-pending",
+    "ms.vss-pipelinechecks-events.approval-completed",
+    "build.complete",
 ]
 
 # Resource Versions
@@ -302,15 +308,23 @@ class Client:
             raise AzureDevOpsException("Error listing service hooks", e) from e
         return data["results"]
 
+    def _get_publisher_id(self, event_type):
+        """Get the correct publisher ID for a given event type."""
+        if event_type.startswith("ms.vss-pipelines.") or event_type.startswith("ms.vss-pipelinechecks-events."):
+            return "pipelines"
+        else:
+            return "tfs"
+
     def configure_service_hook(self, project, event_type):
         self.verbose_print(
             f"Configuring {event_type} service hook for project {project['name']}..."
         )
         url = f"{self._az_base_url()}/_apis/hooks/subscriptions?api-version=7.1"
+        publisher_id = self._get_publisher_id(event_type)
         resource_version = EVENT_TYPE_VERSIONS.get(event_type, DEFAULT_RESOURCE_VERSION)
         payload = json.dumps(
             {
-                "publisherId": "tfs",
+                "publisherId": publisher_id,
                 "eventType": event_type,
                 "resourceVersion": resource_version,
                 "consumerId": "webHooks",
