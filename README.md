@@ -50,7 +50,7 @@ $Env:DD_API_KEY = "<api-key>"
 .\setup-hooks.ps1 -DdSite <datadog-site> -AzDevOpsOrg <organization-slug>
 ```
 
-If you only want to install the service hooks for a single project in your Azure DevOps organization, you can use the `--project` flag to only target this one.
+If you only want to install the service hooks for a single project in your Azure DevOps organization, you can use the `--project` (python) or `-Project` (powershell) flag to only target this one.
 
 ### Uninstalling the service hooks
 
