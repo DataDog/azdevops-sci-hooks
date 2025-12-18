@@ -7,7 +7,9 @@ param(
     [Parameter(Mandatory=$true)]
     [string]$AzDevOpsOrg,
 
-    [switch]$Uninstall
+    [switch]$Uninstall,
+
+    [string]$Project
 )
 
 $EVENT_TYPES = @(
@@ -71,13 +73,15 @@ class Client {
     [string]$DdSite
     [string]$DdApiKey
     [bool]$Verbose
+    [string]$Project
 
-    Client([string]$AzDevOpsOrg, [string]$AzDevOpsToken, [string]$DdSite, [string]$DdApiKey, [bool]$Verbose) {
+    Client([string]$AzDevOpsOrg, [string]$AzDevOpsToken, [string]$DdSite, [string]$DdApiKey, [bool]$Verbose, [string]$Project) {
         $this.AzDevOpsToken = $AzDevOpsToken
         $this.AzDevOpsOrg = $AzDevOpsOrg
         $this.DdSite = $DdSite
         $this.DdApiKey = $DdApiKey
         $this.Verbose = $Verbose
+        $this.Project = $Project
     }
 
     [object] GetAzAuthHeaders() {
@@ -214,8 +218,17 @@ class Client {
     [void] InstallHooks() {
         $projects = $this.ListProjects($null)
 
+        if (-not [string]::IsNullOrEmpty($this.Project)) {
+            $projects = $projects | Where-Object { $_.name -eq $this.Project }
+        }
+
         if ($projects.Count -eq 0) {
-            Write-Host "No projects found in $($this.AzDevOpsOrg)."
+            if ([string]::IsNullOrEmpty($this.Project)) {
+                Write-Host "No projects found in $($this.AzDevOpsOrg)."
+            }
+            else {
+                Write-Host "Project $($this.Project) not found in $($this.AzDevOpsOrg)"
+            }
             return
         }
 
@@ -250,14 +263,22 @@ class Client {
         }
 
         if ($toProcess.Count -eq 0) {
-            Write-Host "All $($projects.Count) projects in $($this.AzDevOpsOrg) already have Datadog service hooks correctly configured!"
+            if ([string]::IsNullOrEmpty($this.Project)) {
+                Write-Host "All $($projects.Count) projects in $($this.AzDevOpsOrg) already have Datadog service hooks correctly configured!"
+            }
+            else {
+                Write-Host "The project $($this.Project) already has Datadog service hooks correctly configured!"
+            }
             return
         }
 
-        $response = Read-Host "$numProjectsMissingAtLeastOne of $($projects.Count) projects in $($this.AzDevOpsOrg) are missing at least one service hook.`nPlease confirm that you want to configure service hooks for these $numProjectsMissingAtLeastOne projects (yes/no)"
-        if ($response.ToLower() -notin @("yes", "y")) {
-            Write-Host "Exiting."
-            exit 1
+        # Prompt confirmation for batch setup (skip if single project specified)
+        if ([string]::IsNullOrEmpty($this.Project)) {
+            $response = Read-Host "$numProjectsMissingAtLeastOne of $($projects.Count) projects in $($this.AzDevOpsOrg) are missing at least one service hook.`nPlease confirm that you want to configure service hooks for these $numProjectsMissingAtLeastOne projects (yes/no)"
+            if ($response.ToLower() -notin @("yes", "y")) {
+                Write-Host "Exiting."
+                exit 1
+            }
         }
 
         for ($i = 0; $i -lt $toProcess.Count; $i++) {
@@ -265,10 +286,20 @@ class Client {
             $this.ConfigureServiceHook($toProcess[$i].Project, $toProcess[$i].EventType)
         }
 
-        Write-Host "`nSuccessfully configured $($toProcess.Count) service hooks among $numProjectsMissingAtLeastOne projects in $($this.AzDevOpsOrg)!"
+        if ([string]::IsNullOrEmpty($this.Project)) {
+            Write-Host "`nSuccessfully configured $($toProcess.Count) service hooks among $numProjectsMissingAtLeastOne projects in $($this.AzDevOpsOrg)!"
+        }
+        else {
+            Write-Host "`nSuccessfully configured $($toProcess.Count) service hooks in project $($this.Project)!"
+        }
     }
 
     [void] UninstallHooks() {
+        if (-not [string]::IsNullOrEmpty($this.Project)) {
+            Write-Host "Specifying a single project is not supported for the uninstallation command."
+            return
+        }
+
         $hooks = $this.GetExistingHooks()
         if ($hooks.Count -eq 0) {
             Write-Host "No Datadog service hooks found."
@@ -310,7 +341,7 @@ if ([string]::IsNullOrEmpty($azDevOpsToken)) {
 }
 
 $Verbose = $VerbosePreference -eq 'Continue'
-$client = [Client]::new($AzDevOpsOrg, $azDevOpsToken, $DdSite, $ddApiKey, $Verbose)
+$client = [Client]::new($AzDevOpsOrg, $azDevOpsToken, $DdSite, $ddApiKey, $Verbose, $Project)
 $client.ValidateDdApiKey()
 
 try {
