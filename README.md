@@ -5,6 +5,7 @@ This script is a helper to configure service hooks required by Datadog's Source 
 Datadog requires the following event types:
 - [`git.pullrequest.created`](https://learn.microsoft.com/en-us/azure/devops/service-hooks/events?view=azure-devops#git.pullrequest.created)
 - [`git.pullrequest.updated`](https://learn.microsoft.com/en-us/azure/devops/service-hooks/events?view=azure-devops#git.pullrequest.updated)
+- [`git.pullrequest.merged`](https://learn.microsoft.com/en-us/azure/devops/service-hooks/events?view=azure-devops#git.pullrequest.merge.attempted)
 - [`git.push`](https://learn.microsoft.com/en-us/azure/devops/service-hooks/events?view=azure-devops#git.push)
 - [`ms.vss-pipelines.run-state-changed-event`](https://learn.microsoft.com/en-us/azure/devops/service-hooks/events?view=azure-devops#run-state-changed)
 - [`ms.vss-pipelines.stage-state-changed-event`](https://learn.microsoft.com/en-us/azure/devops/service-hooks/events?view=azure-devops#run-stage-state-changed)
