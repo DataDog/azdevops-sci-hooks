@@ -11,7 +11,7 @@ import urllib.request
 EVENT_TYPES = [
     "git.pullrequest.created",
     "git.pullrequest.updated",
-    "git.pullrequset.merged",
+    "git.pullrequest.merged",
     "git.push",
     "ms.vss-pipelines.run-state-changed-event",
     "ms.vss-pipelines.stage-state-changed-event",
