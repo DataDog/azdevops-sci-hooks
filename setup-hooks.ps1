@@ -1,7 +1,7 @@
 #!/usr/bin/env pwsh
 param(
     [Parameter(Mandatory=$true)]
-    [ValidateSet("datadoghq.com", "datadoghq.eu", "ap1.datadoghq.com", "us3.datadoghq.com", "us5.datadoghq.com", "ddog-gov.com", "datad0g.com")]
+    [ValidateSet("datadoghq.com", "datadoghq.eu", "ap1.datadoghq.com", "us3.datadoghq.com", "us5.datadoghq.com", "ap2.datadoghq.com", "ddog-gov.com", "datad0g.com")]
     [string]$DdSite,
 
     [Parameter(Mandatory=$true)]
