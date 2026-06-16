@@ -41,6 +41,7 @@ VALID_DD_SITES = [
     "us3.datadoghq.com",
     "us5.datadoghq.com",
     "ap2.datadoghq.com",
+    "uk1.datadoghq.com",
     "datad0g.com",
 ]
 
