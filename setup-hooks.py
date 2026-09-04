@@ -13,6 +13,7 @@ EVENT_TYPES = [
     "git.pullrequest.updated",
     "git.pullrequest.merged",
     "git.push",
+    "git.repo.created",
     "ms.vss-code.git-pullrequest-comment-event",
     "ms.vss-pipelines.run-state-changed-event",
     "ms.vss-pipelines.stage-state-changed-event",

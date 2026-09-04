@@ -7,6 +7,7 @@ Datadog requires the following event types:
 - [`git.pullrequest.updated`](https://learn.microsoft.com/en-us/azure/devops/service-hooks/events?view=azure-devops#git.pullrequest.updated)
 - [`git.pullrequest.merged`](https://learn.microsoft.com/en-us/azure/devops/service-hooks/events?view=azure-devops#git.pullrequest.merge.attempted)
 - [`git.push`](https://learn.microsoft.com/en-us/azure/devops/service-hooks/events?view=azure-devops#git.push)
+- [`git.repo.created`](https://learn.microsoft.com/en-us/azure/devops/service-hooks/events?view=azure-devops#repository-created)
 - [`ms.vss-pipelines.run-state-changed-event`](https://learn.microsoft.com/en-us/azure/devops/service-hooks/events?view=azure-devops#run-state-changed)
 - [`ms.vss-pipelines.stage-state-changed-event`](https://learn.microsoft.com/en-us/azure/devops/service-hooks/events?view=azure-devops#run-stage-state-changed)
 - [`ms.vss-pipelines.job-state-changed-event`](https://learn.microsoft.com/en-us/azure/devops/service-hooks/events?view=azure-devops#run-job-state-changed)

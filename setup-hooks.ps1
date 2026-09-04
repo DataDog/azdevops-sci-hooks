@@ -16,6 +16,7 @@ $EVENT_TYPES = @(
     "git.pullrequest.created",
     "git.pullrequest.updated",
     "git.push",
+    "git.repo.created",
     "ms.vss-pipelines.run-state-changed-event",
     "ms.vss-pipelines.stage-state-changed-event",
     "ms.vss-pipelines.job-state-changed-event",
